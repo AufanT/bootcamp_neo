@@ -38,7 +38,7 @@ app.get('/game/:id', (req, res) => {
     })
 })
 
-app.put('/edit-rating/:id', (req,res) => {
+app.put('/edit-rating/:id', (req, res) => {
     const id = parseInt(req.params.id)
     const { rating } = req.body
     const cariGame = Game.find(g => g.id === id)
@@ -51,6 +51,11 @@ app.put('/edit-rating/:id', (req,res) => {
     if (!rating) {
         return res.status(400).json ({
             message: 'Anda belum memberi rating game ini'
+        })
+    }
+    if (rating === cariGame.rating) {
+        return res.status(200).json ({
+            message: 'rating yang anda masukkan sama dengan sebelumnya'
         })
     }
 
@@ -85,6 +90,12 @@ app.post('/tambah-game', (req, res) => {
     if (!title || !author) {
         return res.status(400).json({
             message: 'judul dan penulis harus diisi'
+        })
+    }
+
+    if (Game.find(g => g.title === title)) {
+        return res.status(400).json({
+            message: 'Game tersebut sudah ada di library anda'
         })
     }
 
