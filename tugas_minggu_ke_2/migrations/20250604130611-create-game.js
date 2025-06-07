@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       release_date: {
-        type: Sequelize.DATE
+        type: Sequelize.DATEONLY
       },
       genre: {
         type: Sequelize.STRING

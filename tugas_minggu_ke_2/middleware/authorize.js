@@ -1,13 +1,10 @@
-const isAdmin = (roles = []) => {
-    if (typeof roles === 'string') {
-       roles = [roles];
+const isAdmin = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!allowedRoles.includes(req.developer.role)) {
+      return res.status(403).json({ message: 'Access denied' });
     }
-    return (req, res, next) => {
-        if (!roles.includes(req.developer.role)) {
-            return res.status(403).json({ message: 'Access denied. You do not have the required role.' });
-        }
-        next();
-    };
-}
+    next();
+  };
+};
 
 module.exports = { isAdmin };
