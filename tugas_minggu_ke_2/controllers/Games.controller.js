@@ -20,22 +20,16 @@ const listGames = async (req, res) => {
 }
 
 const addGame = async (req, res) => {
-    const { game_id } = req.body;
-
-    if (req.developer.id != game_id && req.developer.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied' });
-    }
-
     try {
-        const { title, release_date, genre, description, game_id } = req.body;
-        const existingDeveloper = await Developer.findByPk( game_id );
+        const { title, release_date, genre, description, developer_id } = req.body;
+        const existingDeveloper = await Developer.findByPk(developer_id);
         const existingGame = await Game.findOne({ where: { title } });
 
         if (existingGame) {
             return res.status(400).json({ message: 'Game already exists' });
         }
 
-        if (!title || !release_date || !genre || !description || !game_id) {
+        if (!title || !release_date || !genre || !description || !developer_id) {
             return res.status(400).json({ message: 'All fields are required' });
         }
         if (!existingDeveloper) {
@@ -44,13 +38,12 @@ const addGame = async (req, res) => {
             });
         }
 
-
         const newGame = await Game.create({
             title,
             release_date,
             genre,
             description,
-            game_id
+            developer_id
         });
 
         return res.status(201).json({

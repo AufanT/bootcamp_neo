@@ -1,0 +1,991 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  version: 1.0.0
+  description: API for bootcamp Neo Telemetri
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Developer:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the developer
+        name:
+          type: string
+          description: Name of the developer
+        country:
+          type: string
+          description: Country of the developer
+        founded_year:
+          type: integer
+          description: Year the developer was founded
+        website:
+          type: string
+          format: uri
+          description: Website URL of the developer
+        email:
+          type: string
+          format: email
+          description: Email address of the developer
+        password:
+          type: string
+          format: password
+          description: Password for the developer account
+        role:
+          type: enum
+          enum:
+            - admin
+            - user  
+          description: Role of the developer in the system
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the game
+        title:
+          type: string
+          description: Name of the game
+        release_date:
+          type: string
+          format: date
+          description: Release date of the game
+        genre:
+          type: string
+          description: Genre of the game
+        description:
+          type: string
+          description: Description of the game
+        developer_id:
+          type: integer
+          description: ID of the developer who created the game
+
+servers:
+  - url: http://localhost:3000
+    description: Local server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new developer
+      description: Endpoint to register a new developer in the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Developer'
+            example:
+              name: JohnDoe Company
+              country: USA
+              founded_year: 2020
+              website: https://johndoe.com
+              email: john.doe@example.com
+              password: secret
+      responses:
+        '201':
+          description: Developer registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Developer'
+              example:
+                message: Developer registered successfully
+                developer:
+                  id: 1
+                  name: JohnDoe Company
+                  email: john.doe@example.com
+                  role: user
+        '400':
+          description: Bad request, validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Developer with that name already exists
+                message: Email already exists
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /auth/login:
+    post:
+      summary: Login a developer
+      description: Endpoint to login a developer and retrieve a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Developer'
+            example:
+              email: john.doe@example.com
+              password: secret
+      responses:
+        '200':
+          description: Developer logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for authentication
+              example:
+                message: Login successful
+                token: your_jwt_token_here
+        '401':
+          description: Unauthorized, invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid email or password
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /developers/list:
+    get:
+      security:
+        - BearerAuth: []
+      summary: List all developers
+      description: Endpoint to retrieve a list of all developers in the system.
+      responses:
+        '200':
+          description: List of developers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Developer'
+              example:
+                - message: List of developers
+                  developers:
+                    - id: 1
+                      name: John Doe
+                      country: USA
+                      founded_year: 2020
+                      website: https://johndoe.com
+                      email: john.doe@example.com
+                      password: secret
+                      role: admin || user
+                      Games:
+                        - id: 1
+                          title: Game One
+                          genre: Action
+                          release_date: 2020-01-01
+                          developer_id: 1
+                        - id: 2
+                          title: Game Two
+                          genre: Adventure
+                          release_date: 2021-01-01
+                          developer_id: 1
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
+              example:
+                message: Internal server error
+  /developers/list/{id}:
+    get:
+      security:
+        - BearerAuth: []
+      summary: Get a developer by ID
+      description: Endpoint to retrieve a specific developer by their ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique identifier for the developer
+      responses:
+        '200':
+          description: Developer retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Developer'
+              example:
+                message: Developer found
+                developer:
+                  id: 1
+                  name: John Doe
+                  country: USA
+                  founded_year: 2020
+                  website: https://johndoe.com
+                  email: john.doe@example.com
+                  password: secret
+                  role: admin || user
+                  Games:
+                    - id: 1
+                      title: Game One
+                      genre: Action
+                      release_date: 2020-01-01
+                      developer_id: 1
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '404':
+          description: Developer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Developer not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /developers/update/{id}:
+    put:
+      security:
+        - BearerAuth: []
+      summary: Update a developer by ID
+      description: Endpoint to update a specific developer's information by their ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique identifier for the developer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Developer'
+            example:
+              name: JohnDoe Company Updated
+              country: USA
+              founded_year: 2021
+              website: https://johndoedomain.com
+              email: john.doe@example.com
+              password: secret
+      responses:
+        '200':
+          description: Developer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Developer'
+              example:
+                message: Developer updated successfully
+                developer:
+                  id: 1
+                  name: JohnDoe Company Updated
+                  country: USA
+                  founded_year: 2021
+                  website: https://johndoedomain.com
+                  email: john.doe@example.com
+                  password: secret
+                  role: admin || user
+        '400':
+          description: Bad request, validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Developer with that name already exists
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '404':
+          description: Developer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Developer not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /developers/delete/{id}:
+    delete:
+      security:
+        - BearerAuth: []
+      summary: Delete a developer by ID
+      description: Endpoint to delete a specific developer by their ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique identifier for the developer
+      responses:
+        '200':
+          description: Developer deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Developer deleted successfully
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '404':
+          description: Developer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Developer not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /developers/delete-all:
+    delete:
+      security:
+        - BearerAuth: []
+      summary: Delete all developers
+      description: Endpoint to delete all developers.
+      responses:
+        '200':
+          description: All developers deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: All developers deleted successfully
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /games/add:
+    post:
+      security:
+        - BearerAuth: []
+      summary: Add a new game
+      description: Endpoint to add a new game to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Game'
+            example:
+              title: New Game Title
+              release_date: 2023-10-01
+              genre: Action
+              description: This is a new game description.
+              developer_id: 1
+      responses:
+        '201':
+          description: Game added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+              example:
+                message: Game added successfully
+                game:
+                  id: 1
+                  title: New Game Title
+                  release_date: 2023-10-01
+                  genre: Action
+                  description: This is a new game description.
+                  developer_id: 1
+        '400':
+          description: Bad request, validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid input data
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /games/list:
+    get:
+      security:
+        - BearerAuth: []
+      summary: List all games
+      description: Endpoint to retrieve a list of all games.
+      responses:
+        '200':
+          description: List of games retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  games:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Game'
+              example:
+                message: List of games
+                games:
+                  - id: 1
+                    title: Game Title 1
+                    release_date: 2023-10-01
+                    genre: Action
+                    description: This is a game description.
+                    developer_id: 1
+                    Developer:
+                      id: 1
+                      name: John Doe
+                      country: USA
+                      founded_year: 2020
+                      website: https://johndoe.com
+                      email: johndoe@example.com
+                      password: secret
+                      role: admin || user
+                  - id: 2
+                    title: Game Title 2
+                    release_date: 2023-10-02
+                    genre: Adventure
+                    description: This is another game description.
+                    developer_id: 2
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /games/list/{id}:
+    get:
+      security:
+        - BearerAuth: []
+      summary: Get a game by ID
+      description: Endpoint to retrieve a specific game by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique identifier for the game
+      responses:
+        '200':
+          description: Game retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+              example:
+                message: Game found
+                game:
+                  id: 1
+                  title: Game Title 1
+                  release_date: 2023-10-01
+                  genre: Action
+                  description: This is a game description.
+                  developer_id: 1
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Game not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /games/update/{id}:
+    put:
+      security:
+        - BearerAuth: []
+      summary: Update a game by ID
+      description: Endpoint to update a specific game's information by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique identifier for the game
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Game'
+            example:
+              title: Updated Game Title
+              release_date: 2023-11-01
+              genre: Strategy
+              description: This is an updated game description.
+      responses:
+        '200':
+          description: Game updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+              example:
+                message: Game updated successfully
+                game:
+                  id: 1
+                  title: Updated Game Title
+                  release_date: 2023-11-01
+                  genre: Strategy
+                  description: This is an updated game description.
+                  developer_id: 1
+        '400':
+          description: Bad request, validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid input data
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied. You can only update your own games
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Game not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /games/delete/{id}:
+    delete:
+      security:
+        - BearerAuth: []
+      summary: Delete a game by ID
+      description: Endpoint to delete a specific game by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique identifier for the game
+      responses:
+        '200':
+          description: Game deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Game deleted successfully
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied. You can only delete your own games
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Game not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
+  /games/delete-all:
+    delete:
+      security:
+        - BearerAuth: []
+      summary: Delete all games
+      description: Endpoint to delete all games in the system.
+      responses:
+        '200':
+          description: All games deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: All games deleted successfully
+        '401':
+          description: Unauthorized, invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Invalid token
+        '403':
+          description: Forbidden, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Access denied
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Internal server error
